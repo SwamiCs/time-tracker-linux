@@ -1,13 +1,5 @@
 require('dotenv').config();
 const { app, BrowserWindow, ipcMain, desktopCapturer, powerMonitor, powerSaveBlocker, Notification, screen, dialog, shell, systemPreferences, session } = require('electron');
-
-// Force X11 backend and disable GPU sandboxing on Linux to make screen-capture, idle tracking,
-// and floating toasts work out-of-the-box on double-click without terminal commands.
-if (process.platform === 'linux') {
-  app.commandLine.appendSwitch('ozone-platform', 'x11');
-  app.commandLine.appendSwitch('disable-gpu-sandbox');
-}
-
 const path = require('path');
 const fs = require('fs');
 
@@ -1084,10 +1076,15 @@ function createWindow() {
         iconPath = icoPath; // Fallback to .ico on macOS
       }
     } else {
-      // Windows and Linux use .ico
+      // Linux prefers PNG, Windows prefers ICO
+      const pngPath = path.join(__dirname, 'assets', 'android-chrome-512x512.png');
       const icoPath = path.join(__dirname, 'assets', 'favicon.ico');
-      if (fs.existsSync(icoPath)) {
+      if (process.platform === 'linux' && fs.existsSync(pngPath)) {
+        iconPath = pngPath;
+      } else if (fs.existsSync(icoPath)) {
         iconPath = icoPath;
+      } else if (fs.existsSync(pngPath)) {
+        iconPath = pngPath;
       }
     }
   } catch (e) {
@@ -1847,6 +1844,11 @@ function intersectionArea(a, b) {
   return x * y;
 }
 
+function getWindowsSnapshot() {
+  // Stub to prevent ReferenceError. Can be expanded for platform-specific window list querying.
+  return [];
+}
+
 //Remove if doesn't work
 async function getAppNameForDisplay(displayIndex) {
   try {
@@ -2000,20 +2002,6 @@ async function getActiveAppNameForDisplayViaAppleScript(displayIndex, targetDisp
       }
     });
   });
-}
-
-async function getLinuxActiveWindow() {
-  if (process.env.XDG_SESSION_TYPE === 'wayland') {
-    // Wayland tracking requires looking into active systemd/dbus or relying on specific GNOME extensions
-    return "Linux Wayland Session (Active App Masked)";
-  } else {
-    try {
-      const { execSync } = require('child_process');
-      return execSync('xdotool getwindowfocus getwindowname').toString().trim();
-    } catch (e) {
-      return "Unknown Linux App";
-    }
-  }
 }
 
 // Helper function to process active window result (extracted from getActiveAppName)
@@ -5638,21 +5626,18 @@ ipcMain.handle('frappe:cleanup-and-start', async (_event, { timesheet, project, 
   }
 });
 
-if (process.platform === 'linux') {
-  // Enables Chromium's WebRTC PipeWire engine for desktopCapturer to read screens
-  process.argv.push('--enable-features=WebRTCPipeWireCapturer');
-  // Instructs Electron to use Wayland natively, fallback to XWayland if it fails
-  process.argv.push('--ozone-platform-hint=auto');
-}
-
 // ============ APP LIFECYCLE ============
 app.whenReady().then(() => {
   logInfo('App', 'APP VERSION:', app.getVersion());
   // Enable auto-launch on system startup
-  app.setLoginItemSettings({
-    openAtLogin: true
-  });
-  logInfo('App', 'Auto-launch on login enabled');
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: true
+    });
+    logInfo('App', 'Auto-launch on login enabled');
+  } catch (err) {
+    logWarn('App', `Failed to enable auto-launch: ${err.message}`);
+  }
 
   // Enable cookie persistence for Frappe sessions
   // This allows the session cookie (sid) to persist across app restarts

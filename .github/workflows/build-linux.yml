@@ -1,0 +1,65 @@
+name: Build Linux App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libx11-dev \
+            libxkbfile-dev \
+            libsecret-1-dev \
+            libjpeg-dev \
+            libcairo2-dev \
+            libpango1.0-dev \
+            libgif-dev \
+            librsvg2-dev \
+            libpixman-1-dev \
+            libfontconfig1-dev \
+            scrot \
+            xdotool \
+            wmctrl
+
+      - name: Create .env from Secrets
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
+          echo "FRAPPE_URL=${{ secrets.FRAPPE_URL }}" >> .env
+          echo "FRAPPE_API_KEY=${{ secrets.FRAPPE_API_KEY }}" >> .env
+          echo "FRAPPE_API_SECRET=${{ secrets.FRAPPE_API_SECRET }}" >> .env
+          echo "REPORTS_URL=${{ secrets.REPORTS_URL }}" >> .env
+          echo "SUPABASE_SCREENSHOT_BUCKET=${{ secrets.SUPABASE_SCREENSHOT_BUCKET }}" >> .env
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Build Electron App for Linux
+        run: npm run build:linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux-Builds
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+          if-no-files-found: error

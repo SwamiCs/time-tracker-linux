@@ -6,9 +6,10 @@
   "productName": "Time-Tracker",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --linux deb AppImage --publish=never",
-    "build:test": "node -e \"const fs = require('fs'); fs.copyFileSync('.env.test', '.env');\" && npx electron-builder --linux deb AppImage --publish=never -c.npmRebuild=false",
-    "build:prod": "node -e \"const fs = require('fs'); fs.copyFileSync('.env.production', '.env');\" && npx electron-builder --linux deb AppImage --publish=always -c.npmRebuild=false",
+    "build": "electron-builder --publish=never",
+    "build:linux": "electron-builder --linux --publish=never",
+    "build:test": "copy .env.test .env && electron-builder --publish=never",
+    "build:prod": "copy .env.production .env && electron-builder --publish=always",
     "release": "electron-builder --publish=always",
     "dev": "electron . --dev",
     "build:publish": "electron-builder --publish=always",
@@ -29,10 +30,7 @@
     "supabase",
     "time-management"
   ],
-  "author": {
-    "name": "Your Name",
-    "email": "info@renocrewsolutions.com"
-  },
+  "author": "Your Name",
   "license": "MIT",
   "dependencies": {
     "@paymoapp/active-window": "^2.0.0",
@@ -181,20 +179,13 @@
       "shortcutName": "Time-Tracker"
     },
     "linux": {
-      "category": "Utility",
       "target": [
-        "deb",
-        "AppImage"
+        "AppImage",
+        "deb"
       ],
-      "icon": "assets/android-chrome-512x512.png"
-    },
-    "deb": {
-      "depends": [
-        "libnotify4",
-        "libxtst6",
-        "libnss3",
-        "xdotool"
-      ]
+      "icon": "assets/android-chrome-512x512.png",
+      "category": "Office",
+      "executableName": "time-tracker"
     }
   }
 }
