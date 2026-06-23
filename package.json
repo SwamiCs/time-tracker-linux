@@ -30,7 +30,7 @@
     "supabase",
     "time-management"
   ],
-  "author": "Your Name",
+  "author": "ABC <abc@example.com>",
   "license": "MIT",
   "dependencies": {
     "@paymoapp/active-window": "^2.0.0",
@@ -185,7 +185,8 @@
       ],
       "icon": "assets/android-chrome-512x512.png",
       "category": "Office",
-      "executableName": "time-tracker"
+      "executableName": "time-tracker",
+      "maintainer": "ABC <abc@example.com>"
     }
   }
 }
