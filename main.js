@@ -3,6 +3,13 @@ const { app, BrowserWindow, ipcMain, desktopCapturer, powerMonitor, powerSaveBlo
 const path = require('path');
 const fs = require('fs');
 
+// ==== LINUX NATIVE WAYLAND & VM FIXES ====
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
+  app.commandLine.appendSwitch('enable-features', 'WaylandWindowDecorations');
+  app.commandLine.appendSwitch('disable-gpu-sandbox');
+}
+
 const log1 = require('electron-log');
 
 // Load environment variables as soon as app is ready to check its packaged status
@@ -1104,7 +1111,7 @@ function createWindow() {
     maxHeight: PHONE_HEIGHT,
     useContentSize: true,      // <--- ADD THIS: Ensures 360x640 is for the internal page
     autoHideMenuBar: true,
-    resizable: false,
+    resizable: process.platform === 'linux' ? true : false,
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -1171,6 +1178,15 @@ function createWindow() {
       }
     }
   });
+
+  // FALLBACK: Force show if graphics engine stalls on Linux VMs
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.isVisible()) {
+      try {
+        mainWindow.show();
+      } catch(e) {}
+    }
+  }, 3000);
 
 
   const broadcastIdleState = (isIdle) => {
