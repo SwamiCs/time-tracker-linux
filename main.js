@@ -6,7 +6,7 @@ const fs = require('fs');
 // ==== LINUX NATIVE WAYLAND & VM FIXES ====
 if (process.platform === 'linux') {
   app.commandLine.appendSwitch('ozone-platform-hint', 'auto');
-  app.commandLine.appendSwitch('enable-features', 'WaylandWindowDecorations');
+  app.commandLine.appendSwitch('enable-features', 'WaylandWindowDecorations,WebRTCPipeWireCapturer');
   app.commandLine.appendSwitch('disable-gpu-sandbox');
 }
 

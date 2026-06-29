@@ -1,0 +1,23 @@
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    xvfb \
+    libnss3 \
+    libasound2 \
+    libxss1 \
+    libatk-bridge2.0-0 \
+    libgtk-3-0 \
+    libgbm1 \
+    dbus-x11 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY dist/*.deb /app/app.deb
+
+RUN dpkg -i /app/app.deb || apt-get install -f -y
+
+# Run the app with xvfb
+CMD xvfb-run -a --server-args="-screen 0 1024x768x24" /opt/time-tracker/time-tracker --no-sandbox --ozone-platform-hint=auto > /app/electron.log 2>&1 & \
+    sleep 10 && cat /app/electron.log
