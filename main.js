@@ -1345,8 +1345,28 @@ function createWindow() {
 
   if (!global.__idlePollInterval) {
     let lastBroadcast = null;
+    let wasLocked = false;
+    let lastPollTime = Date.now();
     global.__idlePollInterval = setInterval(() => {
       try {
+        const now = Date.now();
+        // Check for massive time jumps (indicates the system just woke up from sleep)
+        if (now - lastPollTime > 10000) {
+          logInfo('PowerMonitor', 'Detected massive time jump in polling loop (system sleep fallback), triggering suspend clock-out.');
+          broadcastLockOrSuspendClockOut('suspend');
+        }
+        lastPollTime = now;
+
+        // Fallback for Linux: Poll lock state directly since the event often fails on GNOME
+        const idleState = powerMonitor.getSystemIdleState(1);
+        if (idleState === 'locked' && !wasLocked) {
+          wasLocked = true;
+          logInfo('PowerMonitor', 'Detected locked state via polling, broadcasting lock-screen clock-out');
+          broadcastLockOrSuspendClockOut('lock_screen');
+        } else if (idleState !== 'locked' && wasLocked) {
+          wasLocked = false;
+        }
+
         const idleSeconds = powerMonitor.getSystemIdleTime();
         const isIdle = idleSeconds >= IDLE_THRESHOLD_SECONDS;
         if (lastBroadcast === null || lastBroadcast !== isIdle) {
