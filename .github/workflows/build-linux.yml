@@ -73,8 +73,12 @@ jobs:
           # Install the built .deb file
           sudo dpkg -i dist/*.deb || sudo apt-get install -f -y
           
+          # Find the exact executable path dynamically since it might be /opt/Time-Tracker/time-tracker or similar
+          APP_EXEC=$(find /opt -type f -executable -iname "*time-tracker*" | head -n 1)
+          echo "Found executable at: $APP_EXEC"
+          
           # Run the application headless for 15 seconds to ensure it doesn't crash on Wayland/Linux
-          xvfb-run -a --server-args="-screen 0 1024x768x24" /opt/time-tracker/time-tracker --no-sandbox --ozone-platform-hint=auto > electron.log 2>&1 &
+          xvfb-run -a --server-args="-screen 0 1024x768x24" "$APP_EXEC" --no-sandbox --ozone-platform-hint=auto > electron.log 2>&1 &
           PID=$!
           sleep 15
           
