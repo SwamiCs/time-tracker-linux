@@ -1357,14 +1357,16 @@ function createWindow() {
         }
         lastPollTime = now;
 
-        // Fallback for Linux: Poll lock state directly since the event often fails on GNOME
-        const idleState = powerMonitor.getSystemIdleState(1);
-        if (idleState === 'locked' && !wasLocked) {
-          wasLocked = true;
-          logInfo('PowerMonitor', 'Detected locked state via polling, broadcasting lock-screen clock-out');
-          broadcastLockOrSuspendClockOut('lock_screen');
-        } else if (idleState !== 'locked' && wasLocked) {
-          wasLocked = false;
+        // Fallback exclusively for Linux: Poll lock state directly since the event often fails on GNOME
+        if (process.platform === 'linux') {
+          const idleState = powerMonitor.getSystemIdleState(1);
+          if (idleState === 'locked' && !wasLocked) {
+            wasLocked = true;
+            logInfo('PowerMonitor', 'Detected locked state via polling, broadcasting lock-screen clock-out');
+            broadcastLockOrSuspendClockOut('lock_screen');
+          } else if (idleState !== 'locked' && wasLocked) {
+            wasLocked = false;
+          }
         }
 
         const idleSeconds = powerMonitor.getSystemIdleTime();
