@@ -41,14 +41,7 @@ jobs:
 
       - name: Create .env from Secrets
         run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
-          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
-          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
-          echo "FRAPPE_URL=${{ secrets.FRAPPE_URL }}" >> .env
-          echo "FRAPPE_API_KEY=${{ secrets.FRAPPE_API_KEY }}" >> .env
-          echo "FRAPPE_API_SECRET=${{ secrets.FRAPPE_API_SECRET }}" >> .env
-          echo "REPORTS_URL=${{ secrets.REPORTS_URL }}" >> .env
-          echo "SUPABASE_SCREENSHOT_BUCKET=${{ secrets.SUPABASE_SCREENSHOT_BUCKET }}" >> .env
+          echo "${{ secrets.ENV }}" > .env
 
       - name: Install Node Dependencies
         run: npm ci
